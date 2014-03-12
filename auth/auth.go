@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -109,4 +110,25 @@ func getHashFunction(algorithm string) (hashFunc crypto.Hash) {
 		hashFunc = crypto.SHA256
 	}
 	return
+}
+
+func (cred *Credentials) Region() string {
+	sdcUrl := cred.SdcEndpoint.URL
+
+	if isLocalhost(sdcUrl) {
+		return "some-region"
+	}
+	return sdcUrl[strings.LastIndex(sdcUrl, "/")+1 : strings.Index(sdcUrl, ".")]
+}
+
+func isLocalhost(u string) bool {
+	parsedUrl, err := url.Parse(u)
+	if err != nil {
+		return false
+	}
+	if strings.HasPrefix(parsedUrl.Host, "localhost") || strings.HasPrefix(parsedUrl.Host, "127.0.0.1") {
+		return true
+	}
+
+	return false
 }
