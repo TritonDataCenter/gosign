@@ -13,11 +13,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	gc "launchpad.net/gocheck"
-	"launchpad.net/gojoyent/auth"
-	"launchpad.net/gojoyent/jpc"
 	"net/http"
 	"os"
 	"testing"
+
+	"github.com/joyent/gosign/auth"
 )
 
 const (
@@ -77,11 +77,11 @@ func (s *AuthSuite) TestCreateSdcAuthorizationHeader(c *gc.C) {
 	headers := make(http.Header)
 	headers["Date"] = []string{"Mon, 14 Oct 2013 18:49:29 GMT"}
 	keyName := os.Getenv("HOME") + keyPath
-	authentication := jpc.Auth{User: "test_user", KeyFile: keyName, Algorithm: "rsa-sha256"}
-	credentials := &jpc.Credentials{
+	authentication := auth.Auth{User: "test_user", KeyFile: keyName, Algorithm: "rsa-sha256"}
+	credentials := &auth.Credentials{
 		UserAuthentication: authentication,
 		SdcKeyId:           "test_key",
-		SdcEndpoint:        jpc.Endpoint{URL: "http://gotest.api.joyentcloud.com"},
+		SdcEndpoint:        auth.Endpoint{URL: "http://gotest.api.joyentcloud.com"},
 	}
 	authHeader, err := auth.CreateAuthorizationHeader(headers, credentials, false)
 	c.Assert(err, gc.IsNil)
@@ -92,11 +92,11 @@ func (s *AuthSuite) TestCreateMantaAuthorizationHeader(c *gc.C) {
 	headers := make(http.Header)
 	headers["Date"] = []string{"Mon, 14 Oct 2013 18:49:29 GMT"}
 	keyName := os.Getenv("HOME") + keyPath
-	authentication := jpc.Auth{User: "test_user", KeyFile: keyName, Algorithm: "rsa-sha256"}
-	credentials := &jpc.Credentials{
+	authentication := auth.Auth{User: "test_user", KeyFile: keyName, Algorithm: "rsa-sha256"}
+	credentials := &auth.Credentials{
 		UserAuthentication: authentication,
 		MantaKeyId:         "test_key",
-		MantaEndpoint:      jpc.Endpoint{URL: "http://gotest.manta.joyent.com"},
+		MantaEndpoint:      auth.Endpoint{URL: "http://gotest.manta.joyent.com"},
 	}
 	authHeader, err := auth.CreateAuthorizationHeader(headers, credentials, true)
 	c.Assert(err, gc.IsNil)
