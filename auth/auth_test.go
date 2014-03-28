@@ -10,12 +10,10 @@
 package auth_test
 
 import (
-	"fmt"
-	"io/ioutil"
-	gc "launchpad.net/gocheck"
 	"net/http"
-	"os"
 	"testing"
+
+	gc "launchpad.net/gocheck"
 
 	"github.com/joyent/gosign/auth"
 )
@@ -24,7 +22,6 @@ const (
 	SdcSignature   = "yK0J17CQ04ZvMsFLoH163Sjyg8tE4BoIeCsmKWLQKN3BYgSpR0XyqrecheQ2A0o4L99oSumYSKIscBSiH5rqdf4/1zC/FEkYOI2UzcIHYb1MPNzO3g/5X44TppYE+8dxoH99V+Ts8RT3ZurEYjQ8wmK0TnxdirAevSpbypZJaBOFXUZSxx80m5BD4QE/MSGo/eaVdJI/Iw+nardHNvimVCr6pRNycX1I4FdyRR6kgrAl2NkY2yxx/CAY21Ir+dmbG3A1x4GiIE485LLheAL5/toPo7Gh8G5fkrF9dXWVyX0k9AZXqXNWn5AZxc32dKL2enH09j/X86RtwiR1IEuPww=="
 	MantaSignature = "unBowZ/HOydMxzYkmoB192rn006vujsuZvhx/CieAl+k+YoQsHMM1tAPwbxs71o65sMMymRBZGOZU91lvbEW94rF950HDYy1mhqTf4QAHXc3Km3lInXvAQuvsMrZUofNApzxIdAacNL/ESJ8JCU8sxT2919cDCKkVI8vqOvUJvCyCSIlkBr9d+MLBHuFwr6zRgd3pZSMbMoKrrX6XzsQIUhOldrbSJXYzaQnwvvY2pygPEl491mzY+gt+jiykSVTMlLM2+iCrP4/rmMHenpGYjN2tNftNwo2U6rFwWKwWkK5G1n5YrKMLIt6CV6z+nFLsvhimCtP7WY+pOuVU+1hrA=="
 	testJpcKeyName = "test_key"
-	keyPath        = "/.ssh/gotest_key_id_rsa"
 	key            = `-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAyLOtVh8qXjdwfjZZYwkEgg1yoSzmpKKpmzYW745lBGtPH87F
 spHVHeqjmgFnBsARsD7CHzYyQTho7oLrAEbuF7tKdGRK25wJIenPKKuL+UVwZNeJ
@@ -61,23 +58,10 @@ type AuthSuite struct {
 
 var _ = gc.Suite(&AuthSuite{})
 
-func (s *AuthSuite) SetUpSuite(c *gc.C) {
-	if err := ioutil.WriteFile(os.Getenv("HOME")+keyPath, []byte(key), 0600); err != nil {
-		fmt.Errorf("Error while creating temp key file %j", err)
-	}
-}
-
-func (s *AuthSuite) TearDownSuite(c *gc.C) {
-	if err := os.Remove(os.Getenv("HOME") + keyPath); err != nil {
-		fmt.Errorf("Error while removing temp key file %j", err)
-	}
-}
-
 func (s *AuthSuite) TestCreateSdcAuthorizationHeader(c *gc.C) {
 	headers := make(http.Header)
 	headers["Date"] = []string{"Mon, 14 Oct 2013 18:49:29 GMT"}
-	keyName := os.Getenv("HOME") + keyPath
-	authentication := auth.Auth{User: "test_user", KeyFile: keyName, Algorithm: "rsa-sha256"}
+	authentication := auth.Auth{User: "test_user", PrivateKey: key, Algorithm: "rsa-sha256"}
 	credentials := &auth.Credentials{
 		UserAuthentication: authentication,
 		SdcKeyId:           "test_key",
@@ -91,8 +75,7 @@ func (s *AuthSuite) TestCreateSdcAuthorizationHeader(c *gc.C) {
 func (s *AuthSuite) TestCreateMantaAuthorizationHeader(c *gc.C) {
 	headers := make(http.Header)
 	headers["Date"] = []string{"Mon, 14 Oct 2013 18:49:29 GMT"}
-	keyName := os.Getenv("HOME") + keyPath
-	authentication := auth.Auth{User: "test_user", KeyFile: keyName, Algorithm: "rsa-sha256"}
+	authentication := auth.Auth{User: "test_user", PrivateKey: key, Algorithm: "rsa-sha256"}
 	credentials := &auth.Credentials{
 		UserAuthentication: authentication,
 		MantaKeyId:         "test_key",

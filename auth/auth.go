@@ -17,7 +17,6 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -35,7 +34,7 @@ type Endpoint struct {
 
 type Auth struct {
 	User      string
-	KeyFile   string
+	PrivateKey string
 	Algorithm string
 }
 
@@ -72,11 +71,10 @@ func CreateAuthorizationHeader(headers http.Header, credentials *Credentials, is
 // The GetSignature method signs the specified key according to http://apidocs.joyent.com/cloudapi/#issuing-requests
 // and http://apidocs.joyent.com/manta/api.html#authentication.
 func GetSignature(auth *Auth, signing string) (string, error) {
-	key, err := ioutil.ReadFile(auth.KeyFile)
-	if err != nil {
-		return "", fmt.Errorf("An error occurred while reading the key: %s", err)
+	block, _ := pem.Decode([]byte(auth.PrivateKey))
+	if block == nil {
+		return "", fmt.Errorf("invalid private key data: %s", auth.PrivateKey)
 	}
-	block, _ := pem.Decode(key)
 	rsakey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return "", fmt.Errorf("An error occurred while parsing the key: %s", err)
