@@ -61,7 +61,8 @@ var _ = gc.Suite(&AuthSuite{})
 func (s *AuthSuite) TestCreateSdcAuthorizationHeader(c *gc.C) {
 	headers := make(http.Header)
 	headers["Date"] = []string{"Mon, 14 Oct 2013 18:49:29 GMT"}
-	authentication := auth.Auth{User: "test_user", PrivateKey: key, Algorithm: "rsa-sha256"}
+	authentication, err := auth.NewAuth("test_user", key, "rsa-sha256")
+	c.Assert(err, gc.IsNil)
 	credentials := &auth.Credentials{
 		UserAuthentication: authentication,
 		SdcKeyId:           "test_key",
@@ -75,7 +76,8 @@ func (s *AuthSuite) TestCreateSdcAuthorizationHeader(c *gc.C) {
 func (s *AuthSuite) TestCreateMantaAuthorizationHeader(c *gc.C) {
 	headers := make(http.Header)
 	headers["Date"] = []string{"Mon, 14 Oct 2013 18:49:29 GMT"}
-	authentication := auth.Auth{User: "test_user", PrivateKey: key, Algorithm: "rsa-sha256"}
+	authentication, err := auth.NewAuth("test_user", key, "rsa-sha256")
+	c.Assert(err, gc.IsNil)
 	credentials := &auth.Credentials{
 		UserAuthentication: authentication,
 		MantaKeyId:         "test_key",
