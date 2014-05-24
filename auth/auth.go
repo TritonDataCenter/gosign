@@ -34,12 +34,12 @@ type Endpoint struct {
 
 type Auth struct {
 	User      string
-	PrivateKey string
+	PrivateKey PrivateKey
 	Algorithm string
 }
 
 type Credentials struct {
-	UserAuthentication Auth
+	UserAuthentication *Auth
 	SdcKeyId           string
 	SdcEndpoint        Endpoint
 	MantaKeyId         string
@@ -50,17 +50,30 @@ type PrivateKey struct {
 	key *rsa.PrivateKey
 }
 
+// NewAuth creates a new Auth.
+func NewAuth(user, privateKey, algorithm string) (*Auth, error) {
+	block, _ := pem.Decode([]byte(privateKey))
+	if block == nil {
+		return nil, fmt.Errorf("invalid private key data: %s", privateKey)
+	}
+	rsakey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("An error occurred while parsing the key: %s", err)
+	}
+	return &Auth{user, PrivateKey{rsakey}, algorithm}, nil
+}
+
 // The CreateAuthorizationHeader returns the Authorization header for the give request.
 func CreateAuthorizationHeader(headers http.Header, credentials *Credentials, isMantaRequest bool) (string, error) {
 	if isMantaRequest {
-		signature, err := GetSignature(&credentials.UserAuthentication, "date: "+headers.Get("Date"))
+		signature, err := GetSignature(credentials.UserAuthentication, "date: "+headers.Get("Date"))
 		if err != nil {
 			return "", err
 		}
 		return fmt.Sprintf(MantaSignature, credentials.UserAuthentication.User, credentials.MantaKeyId,
 			credentials.UserAuthentication.Algorithm, signature), nil
 	}
-	signature, err := GetSignature(&credentials.UserAuthentication, headers.Get("Date"))
+	signature, err := GetSignature(credentials.UserAuthentication, headers.Get("Date"))
 	if err != nil {
 		return "", err
 	}
@@ -71,23 +84,13 @@ func CreateAuthorizationHeader(headers http.Header, credentials *Credentials, is
 // The GetSignature method signs the specified key according to http://apidocs.joyent.com/cloudapi/#issuing-requests
 // and http://apidocs.joyent.com/manta/api.html#authentication.
 func GetSignature(auth *Auth, signing string) (string, error) {
-	block, _ := pem.Decode([]byte(auth.PrivateKey))
-	if block == nil {
-		return "", fmt.Errorf("invalid private key data: %s", auth.PrivateKey)
-	}
-	rsakey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return "", fmt.Errorf("An error occurred while parsing the key: %s", err)
-	}
-	privateKey := &PrivateKey{rsakey}
-
 	hashFunc := getHashFunction(auth.Algorithm)
 	hash := hashFunc.New()
 	hash.Write([]byte(signing))
 
 	digest := hash.Sum(nil)
 
-	signed, err := rsa.SignPKCS1v15(rand.Reader, privateKey.key, hashFunc, digest)
+	signed, err := rsa.SignPKCS1v15(rand.Reader, auth.PrivateKey.key, hashFunc, digest)
 	if err != nil {
 		return "", fmt.Errorf("An error occurred while signing the key: %s", err)
 	}
