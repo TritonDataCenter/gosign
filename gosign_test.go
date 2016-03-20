@@ -2,7 +2,7 @@
 // gosign - Go HTTP signing library for the Joyent Public Cloud and Joyent Manta
 //
 //
-// Copyright (c) 2013 Joyent Inc.
+// Copyright (c) 2016 Joyent Inc.
 //
 // Written by Daniele Stroppa <daniele.stroppa@joyent.com>
 //

@@ -6,7 +6,7 @@ The sign package is structured as follow:
 
 	- gosign/auth. This package deals with the authorization and signature of requests.
 
-Copyright (c) 2013 Joyent Inc.
+Copyright (c) 2016 Joyent Inc.
 Written by Daniele Stroppa <daniele.stroppa@joyent.com>
 
 */
