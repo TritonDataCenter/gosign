@@ -87,3 +87,27 @@ func (s *AuthSuite) TestCreateMantaAuthorizationHeader(c *gc.C) {
 	c.Assert(err, gc.IsNil)
 	c.Assert(authHeader, gc.Equals, "Signature keyId=\"/test_user/keys/"+testJpcKeyName+"\",algorithm=\"rsa-sha256\",signature=\""+MantaSignature+"\"")
 }
+
+// GH-8
+func (s *AuthSuite) TestAuthorizationRegion(c *gc.C) {
+	authentication, err := auth.NewAuth("test_user", key, "rsa-sha256")
+	c.Assert(err, gc.IsNil)
+	credentials := &auth.Credentials{
+		UserAuthentication: authentication,
+		SdcKeyId:           "test_key",
+		SdcEndpoint:        auth.Endpoint{URL: "http://gotest.api.joyentcloud.com/"},
+	}
+	c.Assert(credentials.Region(), gc.Equals, "gotest")
+
+	credentials.SdcEndpoint.URL = "http://gotest"
+	c.Assert(credentials.Region(), gc.Equals, "gotest")
+
+	credentials.SdcEndpoint.URL = "http://localhost/"
+	c.Assert(credentials.Region(), gc.Equals, "some-region")
+
+	credentials.SdcEndpoint.URL = "http://127.0.0.1"
+	c.Assert(credentials.Region(), gc.Equals, "some-region")
+
+	credentials.SdcEndpoint.URL = "bogus"
+	c.Assert(credentials.Region(), gc.Equals, "")
+}
